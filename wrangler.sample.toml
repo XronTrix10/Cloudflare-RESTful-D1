@@ -1,0 +1,8 @@
+name = "d1-restful-api"
+main = "src/index.ts"
+compatibility_date = "2023-09-22"
+
+[[d1_databases]]
+binding = "DB" # Don't Change
+database_name = "<DATABASE_NAME>"
+database_id = "<unique-ID-for-your-database>"

@@ -1,0 +1,8 @@
+# copyright 2023 © Xron Trix | https://github.com/Xrontrix10
+
+.wrangler/
+node_modules/
+
+.dev.vars
+
+wrangler.toml
