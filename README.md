@@ -1,5 +1,7 @@
 <!-- copyright 2023 © Xron Trix | https://github.com/Xrontrix10 -->
 
+![](https://user-images.githubusercontent.com/125879861/272316764-12fccf05-ce52-4f78-a6b4-2abe36cc9c63.png)
+
 <h1 align='center'>Serverless RESTful API</h1>
 
 <p align='center'>Built for <i>Cloudflare Workers</i>. uses <i>Cloudflare D1 Sqlite</i> as Database</p>
@@ -152,7 +154,7 @@
          # Query results object array (if any or null)
        }
      ],
-     "time": # Time taken on Operation in Seconds,
+     "time": # Time taken on Operation in milliseconds,
      "success": # Boolean value
    }</pre>
 
