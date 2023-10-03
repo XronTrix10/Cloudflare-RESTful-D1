@@ -27,15 +27,17 @@ export async function getDataByTable(env: Env, table: string): Promise<any> {
   }
 }
 
-export async function getRowValueByID(env: Env, id: string, table: string): Promise<any> {
-  const sql = `SELECT * FROM ${table} WHERE id = ?1`;
+
+// Custom Function to get Row data by selecting Column
+export async function getRowByCol(env: Env, colName: string, colVal: string, table: string): Promise<any> {
+  const sql = `SELECT * FROM ${table} WHERE ${colName} = ?1`;
   try {
-    const stmt = env.DB.prepare(sql).bind(id);
+    const stmt = env.DB.prepare(sql).bind(colVal);
     const { results, success, meta } = await stmt.all();
     if (results.length === 0) {
       return [false, false];
     }
-    return [true, convertToJSON([id, table, results, meta.duration, success])];
+    return [true, convertToJSON([results[0].id, table, results, meta.duration, success])];
   }
 
   catch (error) {
@@ -46,7 +48,7 @@ export async function getRowValueByID(env: Env, id: string, table: string): Prom
 // Function to retrieve Row by ID from the D1 store
 export async function getRowByID(env: Env, id: string, table: string): Promise<any> {
 
-  const [exists, results] = await getRowValueByID(env, id, table);
+  const [exists, results] = await getRowByCol(env, "id", id, table);
 
   if (exists && results) {
     return returnJson(results);
@@ -63,7 +65,7 @@ export async function getRowByID(env: Env, id: string, table: string): Promise<a
 export async function updateRowById(env: Env, id: string, updatedData: any, table: string): Promise<any> {
 
   // Check If Row Exists
-  const [exists, _] = await getRowValueByID(env, id, table);
+  const [exists, _] = await getRowByCol(env, "id", id, table);
   if (!exists) {
     return notFound();
   }
@@ -89,7 +91,6 @@ export async function updateRowById(env: Env, id: string, updatedData: any, tabl
 };
 
 
-
 // Function to insert new data in the D1 store
 export async function insertRowInTable(env: Env, newData: any, table: string) {
 
@@ -99,22 +100,22 @@ export async function insertRowInTable(env: Env, newData: any, table: string) {
   let dataId = generateCustomID();
   let insert_sql = `INSERT INTO ${table} (id, `;
   let create_sql = `CREATE TABLE IF NOT EXISTS ${table} (id TEXT PRIMARY KEY, `;
-  let data = null;
+  let existingData = null;
 
   try {
     const stmt = env.DB.prepare(`SELECT * FROM ${table}`);
     const { results } = await stmt.all();
-    data = JSON.stringify(results);
+    existingData = JSON.stringify(results);
   } catch (error) {
     console.error(error);
   }
 
-  if (data) { // if data fetch was successful
-    dataArray = JSON.parse(data);
+  if (existingData) { // if data fetch was successful
+    dataArray = JSON.parse(existingData);
   }
 
   // Data duplication check
-  if (data && (table === 'Faculties' || table === 'Members')) {
+  if (existingData && (table === 'Faculties' || table === 'Members')) {
 
     dataIndex = dataArray.findIndex( // Check for Duplicate existing data with same mobile
       (data_t: { mobile: any; }) => data_t.mobile === newData.mobile,
@@ -124,7 +125,7 @@ export async function insertRowInTable(env: Env, newData: any, table: string) {
       return dataConflict();
     }
   }
-  else if (data && table === 'Events') {
+  else if (existingData && table === 'Events') {
 
     dataIndex = dataArray.findIndex( // Check for Duplicate existing event with same page
       (data_t: { page: any; }) => data_t.page === newData.page,
@@ -171,8 +172,8 @@ export async function insertRowInTable(env: Env, newData: any, table: string) {
 
   try {
     await env.DB.exec(create_sql); // Create table if it doesn't exist
-    const { results, success, meta } = await env.DB.prepare(insert_sql).bind(dataId, ...sql_values).run(); // Store the new data in D1
-    return returnJson(convertToJSON([dataId, table, results, meta.duration, success]));
+    const { success, meta } = await env.DB.prepare(insert_sql).bind(dataId, ...sql_values).run(); // Store the new data in D1
+    return returnJson(convertToJSON([dataId, table, null, meta.duration, success]));
   }
 
   catch (error) {
@@ -184,13 +185,13 @@ export async function insertRowInTable(env: Env, newData: any, table: string) {
 // Function to delete data by ID from the D1 store
 export async function deleteRowById(env: Env, id: string, table: string) {
   // Check If Row Exists
-  const [exists, results] = await getRowValueByID(env, id, table);
+  const [exists, _] = await getRowByCol(env, "id", id, table);
   if (!exists) {
     return notFound();
   }
 
   try {
-    const { results, success, meta } = await env.DB.prepare(`DELETE FROM ${table} WHERE id = '${id}'`).run();
+    const { success, meta } = await env.DB.prepare(`DELETE FROM ${table} WHERE id = '${id}'`).run();
     // Return results to indicate successful deletion
     return returnJson(convertToJSON([id, table, null, meta.duration, success]));
   } catch (error) {
@@ -202,7 +203,7 @@ export async function deleteRowById(env: Env, id: string, table: string) {
 export async function dropEntireTable(env: Env, table: string) {
 
   try {
-    const { results, success, meta } = await env.DB.prepare(`DROP TABLE IF EXISTS ${table}`).run();
+    const { success, meta } = await env.DB.prepare(`DROP TABLE IF EXISTS ${table}`).run();
     // Return results to indicate successful deletion
     return returnJson(convertToJSON([null, table, null, meta.duration, success]));
   }
