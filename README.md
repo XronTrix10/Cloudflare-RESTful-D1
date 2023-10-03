@@ -28,7 +28,7 @@
 
    <pre>
       curl -x POST https://backend.workers.dev/faculty \
-         -H 'Authorization: AUTH_TOKEN' \
+         -H 'Authorization: AUTH_TOKEN' \    # required for authentication
          -d '{name: "Xron Trix"}'</pre>
 
 </details>
@@ -128,7 +128,7 @@
       <h3>CRUD Operation</h3>
    </summary>
 
-   <h4>Accepts</h4>
+   <h4><strong>Accepts</strong></h4>
 
    - `POST /<API_ROUTE> {json in body}` - Create Single Data
    - `GET /<API_ROUTE>` - Read All Data
@@ -137,30 +137,49 @@
    - `DELETE /<API_ROUTE>` - Delete All Data
    - `DELETE /<API_ROUTE>/<ID>` - Delete Single Data
 
-   <h4>Returns</h4>
+   <br>
+
+   <h4><strong>Returns</strong></h4>
+
+   <h4>Returns an Object of Following Properties on Success</h4>
+
+   <pre>
+   {
+     "id": # ID of the object (if any or null),
+     "collection": # Table Name of the Data,
+     "results": [
+       {
+         # Query results object array (if any or null)
+       }
+     ],
+     "time": # Time taken on Operation in Seconds,
+     "success": # Boolean value
+   }</pre>
+
+   <h4>Also Returns HTTP status</h4>
 
    - Create
 
-      - Returns `http - 200` ID and Collection of new data in JSON on Success  
+      - Returns `http - 200` on Success  
       - Returns `http - 409` on Data Conflict
       - Returns `http - 422` on Unprocessable Entity
       - Returns `http - 500` on Creation error
 
    - Read
 
-      - Returns `http - 200` requested data in JSON on Success 
+      - Returns `http - 200` on Success 
       - Returns `http - 404` on Not Found
 
    - Update
 
-      - Returns `http - 200` Request Permitted! on Success 
+      - Returns `http - 200` on Success 
       - Returns `http - 404` on Not Found
       - Returns `http - 422` on Unprocessable Entity
       - Returns `http - 500` on Update error
 
    - Delete
 
-      - Returns `http - 200` Request Permitted! on Success 
+      - Returns `http - 200` on Success 
       - Returns `http - 404` on Not Found
       - Returns `http - 500` on Update error
 
@@ -202,8 +221,8 @@
 
       <pre>git clone https://github.com/XronTrix10/Cloudflare-RESTful-D1.git</pre>
 
-   - Rename `wrangler.example.toml` file to `wrangler.toml`
-   - Rename `example.dev.vars` file to `.dev.vars`
+   - Rename `wrangler.sample.toml` file to `wrangler.toml`
+   - Rename `sample.dev.vars` file to `.dev.vars`
    - Put a secret Auth Token in `.dev.vars` file. This Token will be used to Authenticate You with Your API
    - Put the auth token in Wrangler as well
 
@@ -215,7 +234,7 @@
 
       <pre>npm install</pre>
 
-   - Create a KV Namespace in Cloudflare
+   - Create a D1 Database in Cloudflare
 
       <pre>wrangler d1 create DATABASE_NAME</pre>
       
