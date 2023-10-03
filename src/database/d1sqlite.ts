@@ -8,12 +8,18 @@ const customAlphabetChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 const generateCustomID = customAlphabet(customAlphabetChars, 6);
 
 
+export function convertToJSON(data: any): any {
+  const [id, collection, results, time, success] = data;
+  return JSON.stringify({ id: id, collection: collection, results: results, time: time, success: success });
+}
+
+
 export async function getDataByTable(env: Env, table: string): Promise<any> {
 
   try {
     const stmt = env.DB.prepare(`SELECT * FROM ${table}`);
-    const { results } = await stmt.all();
-    return JSON.stringify(results);
+    const { results, success, meta } = await stmt.all();
+    return convertToJSON([null, table, results, meta.duration, success]);
   }
 
   catch (e) {
@@ -25,11 +31,11 @@ export async function getRowValueByID(env: Env, id: string, table: string): Prom
   const sql = `SELECT * FROM ${table} WHERE id = ?1`;
   try {
     const stmt = env.DB.prepare(sql).bind(id);
-    const { results } = await stmt.all();
+    const { results, success, meta } = await stmt.all();
     if (results.length === 0) {
       return [false, false];
     }
-    return [true, JSON.stringify(results)];
+    return [true, convertToJSON([id, table, results, meta.duration, success])];
   }
 
   catch (error) {
@@ -57,7 +63,7 @@ export async function getRowByID(env: Env, id: string, table: string): Promise<a
 export async function updateRowById(env: Env, id: string, updatedData: any, table: string): Promise<any> {
 
   // Check If Row Exists
-  const [exists, results] = await getRowValueByID(env, id, table);
+  const [exists, _] = await getRowValueByID(env, id, table);
   if (!exists) {
     return notFound();
   }
@@ -74,8 +80,8 @@ export async function updateRowById(env: Env, id: string, updatedData: any, tabl
   values.push(id);
 
   try {
-    const { results, success, meta } = await env.DB.prepare(sql).bind(...values).run();
-    return returnJson(JSON.stringify({ id: id, collection: table, results: results, time: meta.duration, success: success }));
+    const { success, meta } = await env.DB.prepare(sql).bind(...values).run();
+    return returnJson(convertToJSON([id, table, updatedData, meta.duration, success]));
   } catch (e) {
     console.error(e);
     return serverError();
@@ -87,14 +93,21 @@ export async function updateRowById(env: Env, id: string, updatedData: any, tabl
 // Function to insert new data in the D1 store
 export async function insertRowInTable(env: Env, newData: any, table: string) {
 
-  const data = await getDataByTable(env, table);
   const sql_values = Object.values(newData);
   let dataArray = [];
   let dataIndex = -1;
   let dataId = generateCustomID();
   let insert_sql = `INSERT INTO ${table} (id, `;
   let create_sql = `CREATE TABLE IF NOT EXISTS ${table} (id TEXT PRIMARY KEY, `;
+  let data = null;
 
+  try {
+    const stmt = env.DB.prepare(`SELECT * FROM ${table}`);
+    const { results } = await stmt.all();
+    data = JSON.stringify(results);
+  } catch (error) {
+    console.error(error);
+  }
 
   if (data) { // if data fetch was successful
     dataArray = JSON.parse(data);
@@ -158,8 +171,8 @@ export async function insertRowInTable(env: Env, newData: any, table: string) {
 
   try {
     await env.DB.exec(create_sql); // Create table if it doesn't exist
-    const { results, success, meta } = await env.DB.prepare(insert_sql).bind(dataId, ...sql_values).run(); // Store the new data back in D1
-    return returnJson(JSON.stringify({ id: dataId, collection: table, results: results, time: meta.duration, success: success }));
+    const { results, success, meta } = await env.DB.prepare(insert_sql).bind(dataId, ...sql_values).run(); // Store the new data in D1
+    return returnJson(convertToJSON([dataId, table, results, meta.duration, success]));
   }
 
   catch (error) {
@@ -179,12 +192,11 @@ export async function deleteRowById(env: Env, id: string, table: string) {
   try {
     const { results, success, meta } = await env.DB.prepare(`DELETE FROM ${table} WHERE id = '${id}'`).run();
     // Return results to indicate successful deletion
-    return returnJson(JSON.stringify({ id: id, collection: table, results: results, time: meta.duration, success: success }));
+    return returnJson(convertToJSON([id, table, null, meta.duration, success]));
   } catch (error) {
     console.error(error);
     return serverError();
   }
-
 }
 
 export async function dropEntireTable(env: Env, table: string) {
@@ -192,7 +204,7 @@ export async function dropEntireTable(env: Env, table: string) {
   try {
     const { results, success, meta } = await env.DB.prepare(`DROP TABLE IF EXISTS ${table}`).run();
     // Return results to indicate successful deletion
-    return returnJson(JSON.stringify({ collection: table, results: results, time: meta.duration, success: success }));
+    return returnJson(convertToJSON([null, table, null, meta.duration, success]));
   }
 
   catch (error) {
