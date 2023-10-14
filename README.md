@@ -75,9 +75,9 @@
    </summary>
 
    - `/` - Check if Server is Online
-   - `/faculty` - Access Faculty Members Data
-   - `/member` - Access Regular Members Data
-   - `/event` - Access Event Data
+   - `/faculties` - Access Faculty Members Data
+   - `/members` - Access Regular Members Data
+   - `/events` - Access Event Data
 
 </details>
 

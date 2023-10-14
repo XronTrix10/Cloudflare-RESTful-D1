@@ -22,9 +22,9 @@ export async function respondRequest(req: Request, env: Env, path: string, is_po
 
     // ====== If authorized, then continue the request ====== //
 
-    if (path === '/faculty' || path === '/member') {
+    if (path === '/faculties' || path === '/members') {
 
-        const table = (path === '/faculty') ? "Faculties" : "Members";
+        const table = (path === '/faculties') ? "Faculties" : "Members";
 
         if (is_post) {
 
@@ -68,9 +68,9 @@ export async function respondRequest(req: Request, env: Env, path: string, is_po
         }
     }
 
-    else if (path.startsWith('/faculty/') || path.startsWith('/member/')) {
+    else if (path.startsWith('/faculties/') || path.startsWith('/members/')) {
 
-        const table = (path.startsWith('/faculty/')) ? "Faculties" : "Members";
+        const table = (path.startsWith('/faculties/')) ? "Faculties" : "Members";
         const dataID = decodeURIComponent(path.split('/')[2]);  // Get the id from the URL path
 
         if (is_get) {
@@ -108,7 +108,7 @@ export async function respondRequest(req: Request, env: Env, path: string, is_po
         }
     }
 
-    else if (path === '/event') {
+    else if (path === '/events') {
         const table = 'Events';
 
         if (is_post) {
@@ -146,7 +146,7 @@ export async function respondRequest(req: Request, env: Env, path: string, is_po
         }
     }
 
-    else if (path.startsWith('/event/')) {
+    else if (path.startsWith('/events/')) {
         const table = 'Events';
         const dataID = decodeURIComponent(path.split('/')[2]);  // Get the Event id from the URL path
 
