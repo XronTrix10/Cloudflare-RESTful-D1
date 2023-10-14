@@ -166,8 +166,8 @@ export async function insertRowInTable(env: Env, newData: any, table: string) {
       dataId = "EVT#" + generateCustomID();
     } while (dataArray.some((every_data: { id: string; }) => every_data.id === dataId))
 
-    create_sql += "title TEXT, page TEXT, image TEXT, teams BLOB)";
-    insert_sql += "title, page, image) VALUES (?1, ?2, ?3, ?4)";
+    create_sql += "title TEXT, page TEXT, image TEXT)";
+    insert_sql += "title, page, image) VALUES (?1, ?2, ?3)";
   }
 
   try {
