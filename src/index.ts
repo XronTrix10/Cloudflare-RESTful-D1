@@ -11,29 +11,29 @@ export interface Env {
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 		const method = request.method;
-		const { pathname } = new URL(request.url);
+		const { pathname, search, searchParams } = new URL(request.url);
 
 		if (method === 'POST') {
 
-			const respond = await respondRequest(request, env, pathname, true, false, false, false);
+			const respond = await respondRequest(request, env, pathname, search, searchParams, true, false, false, false);
 			return respond;
 		}
 
 		else if (method === 'GET') {
 
-			const respond = await respondRequest(request, env, pathname, false, true, false, false);
+			const respond = await respondRequest(request, env, pathname, search, searchParams, false, true, false, false);
 			return respond;
 		}
 
 		else if (method === 'PUT') {
 
-			const respond = await respondRequest(request, env, pathname, false, false, true, false);
+			const respond = await respondRequest(request, env, pathname, search, searchParams, false, false, true, false);
 			return respond;
 		}
 
 		else if (method === 'DELETE') {
 
-			const respond = await respondRequest(request, env, pathname, false, false, false, true);
+			const respond = await respondRequest(request, env, pathname, search, searchParams, false, false, false, true);
 			return respond;
 		}
 

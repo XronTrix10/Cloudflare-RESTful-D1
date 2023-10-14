@@ -1,6 +1,6 @@
 <!-- copyright 2023 © Xron Trix | https://github.com/Xrontrix10 -->
 
-![](https://user-images.githubusercontent.com/125879861/272316764-12fccf05-ce52-4f78-a6b4-2abe36cc9c63.png)
+![](https://user-images.githubusercontent.com/125879861/272319389-0f93a128-9b6f-4176-b7bc-e91d4d18104a.png)
 
 <h1 align='center'>Serverless RESTful API</h1>
 
@@ -135,6 +135,7 @@
    - `POST /<API_ROUTE> {json in body}` - Create Single Data
    - `GET /<API_ROUTE>` - Read All Data
    - `GET /<API_ROUTE>/<ID>` - Read Single Data
+   - `GET /<API_ROUTE>?<KEY>=<VALUE>` - Filter Data by Key
    - `PUT /<API_ROUTE>/<ID>` - Update Single Data
    - `DELETE /<API_ROUTE>` - Delete All Data
    - `DELETE /<API_ROUTE>/<ID>` - Delete Single Data

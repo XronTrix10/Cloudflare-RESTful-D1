@@ -2,10 +2,10 @@
 
 import { isAuthorized } from "../auth/authenticate";
 import { Env } from "..";
-import { returnJson, badEntity, badRequest, serverRoot, notFound, notAllowed, noContent } from "./responses";
-import { getDataByTable, getRowByID, updateRowById, insertRowInTable, deleteRowById, dropEntireTable } from "../database/d1sqlite";
+import { returnJson, badEntity, badRequest, serverRoot, notFound, notAllowed, noContent, serverError } from "./responses";
+import { getDataByTable, getRowByID, updateRowById, insertRowInTable, deleteRowById, dropEntireTable, getRowByCol } from "../database/d1sqlite";
 
-export async function respondRequest(req: Request, env: Env, path: string, is_post: boolean, is_get: boolean, is_put: boolean, is_delete: boolean): Promise<Response> {
+export async function respondRequest(req: Request, env: Env, path: string, search: string, searchParams: any, is_post: boolean, is_get: boolean, is_put: boolean, is_delete: boolean): Promise<Response> {
 
     if (is_get && path === '/') { // Check If Server is Live
         return serverRoot();
@@ -22,7 +22,7 @@ export async function respondRequest(req: Request, env: Env, path: string, is_po
 
     // ====== If authorized, then continue the request ====== //
 
-    if (path === '/faculties' || path === '/members') {
+    if ((path === '/faculties' || path === '/members') && !search) {
 
         const table = (path === '/faculties') ? "Faculties" : "Members";
 
@@ -68,7 +68,7 @@ export async function respondRequest(req: Request, env: Env, path: string, is_po
         }
     }
 
-    else if (path.startsWith('/faculties/') || path.startsWith('/members/')) {
+    else if ((path.startsWith('/faculties/') || path.startsWith('/members/')) && !search) {
 
         const table = (path.startsWith('/faculties/')) ? "Faculties" : "Members";
         const dataID = decodeURIComponent(path.split('/')[2]);  // Get the id from the URL path
@@ -108,7 +108,40 @@ export async function respondRequest(req: Request, env: Env, path: string, is_po
         }
     }
 
-    else if (path === '/events') {
+    else if ((path.startsWith('/faculties') || path.startsWith('/members')) && search) {
+
+        const table = (path.startsWith('/faculties')) ? "Faculties" : "Members";
+
+        const columns = ["id", "name", "role", "image", "mobile"];
+        if (path.startsWith('/members')) {
+            columns.push("roll");
+        }
+
+        console.log(columns);
+
+        for (const key of searchParams.keys()) {
+
+            const value = searchParams.get(key); // Get the Query Value
+
+            if (columns.includes(key)) { // Search for known column in Query Key
+
+                const [exists, results] = await getRowByCol(env, key, value, table);
+                if (exists && results) {
+                    return returnJson(results);
+                }
+                else if (!exists) {
+                    return notFound();
+                }
+                else {
+                    return serverError();
+                }
+            }
+        }
+
+        return badRequest();
+    }
+
+    else if (path === '/events' && !search) {
         const table = 'Events';
 
         if (is_post) {
@@ -146,7 +179,7 @@ export async function respondRequest(req: Request, env: Env, path: string, is_po
         }
     }
 
-    else if (path.startsWith('/events/')) {
+    else if (path.startsWith('/events/') && !search) {
         const table = 'Events';
         const dataID = decodeURIComponent(path.split('/')[2]);  // Get the Event id from the URL path
 
@@ -181,6 +214,35 @@ export async function respondRequest(req: Request, env: Env, path: string, is_po
         else {
             return notAllowed();
         }
+    }
+
+
+    else if ((path.startsWith('/events')) && search) {
+
+        const table = "Events";
+
+        const columns = ["id", "title", "image", "page"];
+
+        for (const key of searchParams.keys()) {
+
+            const value = searchParams.get(key); // Get the Query Value
+
+            if (columns.includes(key)) { // Search for known column in Query Key
+
+                const [exists, results] = await getRowByCol(env, key, value, table);
+                if (exists && results) {
+                    return returnJson(results);
+                }
+                else if (!exists) {
+                    return notFound();
+                }
+                else {
+                    return serverError();
+                }
+            }
+        }
+
+        return badRequest();
     }
 
     else {
